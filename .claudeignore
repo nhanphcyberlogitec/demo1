@@ -1,0 +1,30 @@
+# Git and common version control
+.git/
+
+# Dependencies and environment
+node_modules/
+venv/
+.venv/
+__pycache__/
+
+# Build artifacts
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Configuration and locks (optional, but saves many tokens)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Sensitive files
+.env*
+*.pem
+*.key
+
+# Misc and logs
+.DS_Store
+*.log
+.vercel/
