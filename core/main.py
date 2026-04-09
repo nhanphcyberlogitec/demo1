@@ -112,7 +112,7 @@ async def login(body: LoginRequest):
         "data": {
             "token": token,
             "user": {
-                "id": user_id,
+                "id": str(user_id),
                 "name": user_name,
                 "email": user_email,
             },
