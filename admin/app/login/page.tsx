@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -10,27 +10,9 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function validateForm(): string | null {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(email)) {
-      return "Please enter a valid email address";
-    }
-    if (password.length < 6) {
-      return "Password must be at least 6 characters";
-    }
-    return null;
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -42,8 +24,8 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (!data.success) {
-        setError(data.message || "Login failed");
+      if (!res.ok || !data.success) {
+        setError(data.message || "Invalid email or password");
         return;
       }
 
@@ -51,24 +33,24 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(data.data.user));
       router.push("/dashboard");
     } catch {
-      setError("Unable to connect to server");
+      setError("Unable to connect to server. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <div className="w-full max-w-[400px] p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
-          Admin Login
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
+      <div className="w-full max-w-[400px] rounded-lg bg-white p-8 shadow-md dark:bg-gray-800">
+        <h1 className="mb-6 text-center text-2xl font-bold text-gray-900 dark:text-white">
+          Login
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Email
             </label>
@@ -76,18 +58,17 @@ export default function LoginPage() {
               id="email"
               type="email"
               required
+              placeholder="admin@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              placeholder="you@example.com"
+              className="w-full rounded-md border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Password
             </label>
@@ -95,11 +76,10 @@ export default function LoginPage() {
               id="password"
               type="password"
               required
+              placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              placeholder="Enter password"
+              className="w-full rounded-md border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
             />
           </div>
 
@@ -110,9 +90,9 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed"
+            className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>
