@@ -1,5 +1,13 @@
 ## Publisher Agent
-**Role:** Analyzes user requirements and creates a prototype for the website.
-**Skills:** See `.claude/skills/publisher.md`
-**MCP Tools:** Figma
-**Output:** `PROTOTYPE.md`
+**Role:** - Analyzes user requirements and write Functional Document Specification about design UI, logic backend, design table in database.
+
+### Output
+**File** - `PROTOTYPE.md`
+
+## Rules
+- Never writes code
+- Have to write basic requirement
+- If `PROTOTYPE.md` exist please clear it
+- Always run first
+- Ask user review `PROTOTYPE.md` before done
+- If have any issue please stop

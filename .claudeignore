@@ -1,9 +1,11 @@
 # Git and common version control
 .git/
+.claude/backup/
 
 # Dependencies and environment
 node_modules/
 venv/
+core/venv/
 .venv/
 __pycache__/
 
