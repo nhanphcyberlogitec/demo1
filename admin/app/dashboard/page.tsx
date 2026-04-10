@@ -3,22 +3,27 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
-  const [userName, setUserName] = useState("");
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
+    const userJson = localStorage.getItem("user");
 
-    if (!token || !userStr) {
+    if (!token || !userJson) {
       router.push("/login");
       return;
     }
 
     try {
-      const user = JSON.parse(userStr);
-      setUserName(user.name || user.email);
+      setUser(JSON.parse(userJson));
     } catch {
       router.push("/login");
     }
@@ -30,31 +35,24 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
+  if (!user) return null;
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            Dashboard
-          </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              {userName}
-            </span>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium"
-            >
-              Logout
-            </button>
-          </div>
+    <div className="flex min-h-screen items-center justify-center bg-[#F9FAFB]">
+      <div className="w-full max-w-[400px] rounded-lg bg-white p-8 shadow-sm mx-4">
+        <div className="flex flex-col items-center gap-4">
+          <h1 className="text-2xl font-bold text-[#111827]">Dashboard</h1>
+          <p className="text-base text-[#374151]">
+            Welcome, {user.name}!
+          </p>
+          <button
+            onClick={handleLogout}
+            className="flex h-11 w-full items-center justify-center rounded-md bg-[#2563EB] text-base font-semibold text-white transition-colors hover:bg-[#1D4ED8]"
+          >
+            Logout
+          </button>
         </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <p className="text-gray-600 dark:text-gray-300">
-          Welcome, {userName}. You are logged in.
-        </p>
-      </main>
+      </div>
     </div>
   );
 }

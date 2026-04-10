@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -25,7 +25,8 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setError(data.message || "Invalid email or password");
+        setError(data.message || "Login failed");
+        setLoading(false);
         return;
       }
 
@@ -34,68 +35,58 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch {
       setError("Unable to connect to server. Please try again.");
-    } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
-      <div className="w-full max-w-[400px] rounded-lg bg-white p-8 dark:bg-gray-800">
-        <h1 className="mb-6 text-center text-2xl font-bold text-gray-900 dark:text-white">
-          Login
-        </h1>
+    <div className="flex min-h-screen items-center justify-center bg-[#F9FAFB]">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-[400px] rounded-lg bg-white p-8 shadow-sm mx-4"
+      >
+        <div className="flex flex-col items-center gap-4">
+          <h1 className="text-2xl font-bold text-[#111827]">Login</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Email
-            </label>
+          <div className="flex w-full flex-col gap-1.5">
+            <label className="text-sm font-medium text-[#374151]">Email</label>
             <input
-              id="email"
               type="email"
               required
-              placeholder="admin@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+              placeholder="admin@example.com"
+              className="h-11 w-full rounded-md border border-[#D1D5DB] bg-white px-3 py-2.5 text-base text-[#111827] placeholder-[#9CA3AF] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
+          <div className="flex w-full flex-col gap-1.5">
+            <label className="text-sm font-medium text-[#374151]">
               Password
             </label>
             <input
-              id="password"
               type="password"
               required
-              placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+              placeholder="Enter password"
+              className="h-11 w-full rounded-md border border-[#D1D5DB] bg-white px-3 py-2.5 text-base text-[#111827] placeholder-[#9CA3AF] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="w-full text-sm text-[#DC2626]">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-base font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-full items-center justify-center rounded-md bg-[#2563EB] text-base font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }
