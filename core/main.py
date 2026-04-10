@@ -50,16 +50,22 @@ def api_response(success: bool, data=None, message: str = "", status_code: int =
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    for error in exc.errors():
-        if "email" in error.get("loc", []):
+    errors = exc.errors()
+    # Check for email-specific format validation (not missing field)
+    for error in errors:
+        if "email" in error.get("loc", []) and error.get("type") != "missing":
             return api_response(
                 success=False,
                 message="Invalid email format",
                 status_code=422,
             )
-    # Fallback for other validation errors
-    messages = "; ".join(e["msg"] for e in exc.errors())
-    return api_response(success=False, message=messages, status_code=422)
+    # For all other validation errors (missing fields, malformed body, etc.)
+    messages = "; ".join(
+        f"{'.'.join(str(loc) for loc in e['loc'])}: {e['msg']}" for e in errors
+    )
+    return api_response(
+        success=False, message=f"Validation failed: {messages}", status_code=422
+    )
 
 
 # --- Routes ---
@@ -90,7 +96,7 @@ async def login(body: LoginRequest):
         user = cur.fetchone()
         cur.close()
     finally:
-        conn.close()
+        database.release_connection(conn)
 
     if not user:
         return api_response(
