@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "frontend-nextjs": {
+      "source": "teodevlor/agent-kit-skill",
+      "sourceType": "github",
+      "computedHash": "4c02e921abe161aad74566adfd65b4713004bf9ec6106cf06c297b58eb84c5c0"
+    },
+    "github-issues": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "3a752d99ddc3178f443fe242d490800398b2b42030a9d221b298b9486d90cc87"
+    },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "computedHash": "45b90b409fb80cf08ee4e8b72377bddacfac3d1c1fac69bff5fd5342fad26adf"
+    },
+    "python-backend-fastapi": {
+      "source": "janjaszczak/cursor",
+      "sourceType": "github",
+      "computedHash": "dc64168c82fc04633cf0842ba5c6700202df8f6a25b56b9a6ea15ca465b48d47"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "f4cd7570115d97af6bcb2946eb891a958c8d04a43b479871c9ccadbc670ad058"
+    },
+    "webapp-testing": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "cf8e5916d474886bd67b09691247f43f331523008b7d366064bc607ab42d6302"
+    }
+  }
+}
