@@ -1,19 +1,26 @@
-# core/main.py
-
-import re
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from jose import jwt
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 import database
 
-app = FastAPI(title="Core API")
+# JWT Configuration
+SECRET_KEY = "super-secret-key-change-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
+app = FastAPI(
+    title="Core API",
+    description="Admin Panel backend API",
+)
+
+# CORS middleware — allow frontend at localhost:3000
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -22,17 +29,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-JWT_SECRET = "super-secret-key-change-in-production"
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_MINUTES = 60
 
-EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-
+# --- Models ---
 
 class LoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
+
+# --- Helpers ---
+
+def api_response(success: bool, data=None, message: str = "", status_code: int = 200):
+    return JSONResponse(
+        status_code=status_code,
+        content={"success": success, "data": data, "message": message},
+    )
+
+
+# --- Exception Handlers ---
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    for error in exc.errors():
+        if "email" in error.get("loc", []):
+            return api_response(
+                success=False,
+                message="Invalid email format",
+                status_code=422,
+            )
+    # Fallback for other validation errors
+    messages = "; ".join(e["msg"] for e in exc.errors())
+    return api_response(success=False, message=messages, status_code=422)
+
+
+# --- Routes ---
 
 @app.get("/")
 async def read_root():
@@ -41,29 +71,15 @@ async def read_root():
 
 @app.post("/api/auth/login")
 async def login(body: LoginRequest):
-    # Validate email format
-    if not EMAIL_REGEX.match(body.email):
-        return JSONResponse(
-            status_code=422,
-            content={
-                "success": False,
-                "data": None,
-                "message": "Validation failed: Please enter a valid email address",
-            },
-        )
-
     # Validate password length
     if len(body.password) < 6:
-        return JSONResponse(
+        return api_response(
+            success=False,
+            message="Password must be at least 6 characters",
             status_code=422,
-            content={
-                "success": False,
-                "data": None,
-                "message": "Validation failed: Password must be at least 6 characters",
-            },
         )
 
-    # Query user from database
+    # Query user by email
     conn = database.get_connection()
     try:
         cur = conn.cursor()
@@ -77,45 +93,34 @@ async def login(body: LoginRequest):
         conn.close()
 
     if not user:
-        return JSONResponse(
+        return api_response(
+            success=False,
+            message="Invalid email or password",
             status_code=401,
-            content={
-                "success": False,
-                "data": None,
-                "message": "Invalid email or password",
-            },
         )
 
-    user_id, user_name, user_email, password_hash = user
+    user_id, name, email, password_hash = user
 
     # Verify password with bcrypt
     if not bcrypt.checkpw(body.password.encode("utf-8"), password_hash.encode("utf-8")):
-        return JSONResponse(
+        return api_response(
+            success=False,
+            message="Invalid email or password",
             status_code=401,
-            content={
-                "success": False,
-                "data": None,
-                "message": "Invalid email or password",
-            },
         )
 
     # Generate JWT token
-    payload = {
-        "sub": str(user_id),
-        "email": user_email,
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRATION_MINUTES),
-    }
-    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    token = jwt.encode(
+        {"sub": str(user_id), "email": email, "exp": expire},
+        SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
 
-    return {
-        "success": True,
-        "data": {
+    return api_response(
+        success=True,
+        data={
             "token": token,
-            "user": {
-                "id": str(user_id),
-                "name": user_name,
-                "email": user_email,
-            },
+            "user": {"id": str(user_id), "name": name, "email": email},
         },
-        "message": "",
-    }
+    )
