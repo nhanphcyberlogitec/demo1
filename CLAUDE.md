@@ -101,7 +101,7 @@ HTTP status codes: `200` success, `401` auth failure, `422` validation error.
 
 All development-related requests (features, bug fixes, refactoring, etc.) must be handled by the agent team.
 
-See [`.claude/agent-team-workflow.md`](.claude/agent-team-workflow.md) for the complete multi-agent orchestration flow. Agent definitions are auto-discovered from `.claude/agents/*.md`. The workflow includes a QC bug-fix loop (QC creates GitHub issues → frontend/backend agents fix → QC re-tests) and an expert review phase after all tests pass.
+See [`.claude/agent-team-workflow.md`](.claude/agent-team-workflow.md) for the complete multi-agent orchestration flow. Agent definitions are auto-discovered from `.claude/agents/*.md`. The workflow includes a qa-tester bug-fix loop (qa-tester creates GitHub issues → frontend-developer / backend-developer agents fix → qa-tester re-tests) and a reviewer phase after all tests pass.
 
 ## Code Conventions
 

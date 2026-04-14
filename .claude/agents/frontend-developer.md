@@ -1,10 +1,12 @@
-## Front-End Agent
-**Role:** - Develops the frontend based on the Figma link and connects the API to the backend.
+## Frontend Developer Agent
+**Role:** - Develops the frontend based on the Figma link and connects to backend APIs using contracts from `BACKEND_API.md`.
 
 ### Input
 **Figma Link** - `FIGMALINK.md`
+**Technical Spec** - `TECH_SPEC.md`
+**API Contract** - `BACKEND_API.md`
 **Scope:** `admin/`
-**Branch:** `develop-test-2`
+**Branch:** `develop-test-3`
 
 ## Skills
 **Develop** - `.agents/skills/frontend-nextjs/SKILL.md`
@@ -52,10 +54,10 @@ Use these tools to understand the layout and components:
 
 ## Rules
 - Never modifies code in `core/`
-- You are only allowed to work after the Figma design is complete.
+- You are only allowed to work after the Figma design is complete AND the orchestrator has sent `"BACKEND_API.md approved"` — do not call any endpoint before that notice
 - Ask user approval if you want to use the Figma link from the file `FIGMALINK.md`
 - Screenshot the design from Figma link from file `FIGMALINK.md`
 - Always handle API errors gracefully in the UI
 - Follow component structure defined in Figma link
-- Push all work to `develop-test-2` branch
+- Push all work to `develop-test-3` branch
 - If have any issue please stop
