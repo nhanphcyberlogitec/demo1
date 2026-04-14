@@ -35,6 +35,7 @@ export default function LoginPage() {
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const shouldFocusPassword = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && localStorage.getItem("token")) {
@@ -43,6 +44,15 @@ export default function LoginPage() {
     }
     setCheckingAuth(false);
   }, [router]);
+
+  // Focus the password field AFTER the input has been re-enabled
+  // (a disabled input silently rejects .focus()).
+  useEffect(() => {
+    if (!submitting && shouldFocusPassword.current) {
+      shouldFocusPassword.current = false;
+      passwordRef.current?.focus();
+    }
+  }, [submitting]);
 
   if (checkingAuth) {
     return (
@@ -111,11 +121,11 @@ export default function LoginPage() {
         );
       }
       setPassword("");
-      passwordRef.current?.focus();
+      shouldFocusPassword.current = true;
     } catch {
       setFormError("Something went wrong. Please try again.");
       setPassword("");
-      passwordRef.current?.focus();
+      shouldFocusPassword.current = true;
     } finally {
       setSubmitting(false);
     }
@@ -198,7 +208,7 @@ export default function LoginPage() {
               name="password"
               type="password"
               autoComplete="current-password"
-              placeholder="••••••••"
+              placeholder=""
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
