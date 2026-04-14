@@ -43,64 +43,72 @@ async def validation_exception_handler(request, exc: RequestValidationError):
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6)
+    password: str = Field(min_length=6, max_length=255)
 
 
 def create_access_token(user_id: str, email: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
-    payload = {"sub": str(user_id), "email": email, "exp": expire}
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": user_id,
+        "email": email,
+        "exp": now + timedelta(minutes=JWT_EXPIRE_MINUTES),
+        "iat": now,
+    }
     return jwt.encode(payload, SECRET_KEY, algorithm=JWT_ALGORITHM)
 
 
-@app.get("/")
-async def read_root():
-    return envelope(True, {"service": "core-api"}, "")
+INVALID_CREDENTIALS_MESSAGE = "Invalid email or password"
+
+NO_STORE_HEADERS = {"Cache-Control": "no-store"}
+
+
+def _invalid_credentials_response() -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content=envelope(False, None, INVALID_CREDENTIALS_MESSAGE),
+        headers=NO_STORE_HEADERS,
+    )
 
 
 @app.post("/api/auth/login")
 async def login(payload: LoginRequest):
-    email = payload.email.strip().lower()
-    password = payload.password
+    email = payload.email.lower()
 
-    conn = None
+    conn = get_connection()
     try:
-        conn = get_connection()
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, email, password_hash, created_at, updated_at "
-                "FROM users WHERE email = %s",
+                "SELECT id, email, password_hash, is_active "
+                "FROM users WHERE LOWER(email) = %s",
                 (email,),
             )
             row = cur.fetchone()
     finally:
-        if conn is not None:
-            release_connection(conn)
+        release_connection(conn)
 
     if row is None:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content=envelope(False, None, "Invalid email or password."),
-        )
+        return _invalid_credentials_response()
 
-    user_id, user_email, password_hash, created_at, updated_at = row
+    user_id, user_email, password_hash, is_active = row
 
-    if not bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8")):
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content=envelope(False, None, "Invalid email or password."),
-        )
+    if not is_active:
+        return _invalid_credentials_response()
 
-    token = create_access_token(str(user_id), user_email)
-    data = {
-        "token": token,
-        "user": {
-            "id": str(user_id),
-            "email": user_email,
-            "created_at": created_at,
-            "updated_at": updated_at,
-        },
-    }
+    if not bcrypt.checkpw(payload.password.encode("utf-8"), password_hash.encode("utf-8")):
+        return _invalid_credentials_response()
+
+    user_id_str = str(user_id)
+    token = create_access_token(user_id_str, user_email)
+
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content=jsonable_encoder(envelope(True, data, "Login successful.")),
+        content=envelope(
+            True,
+            {
+                "token": token,
+                "user": {"id": user_id_str, "email": user_email},
+            },
+            "Login successful",
+        ),
+        headers=NO_STORE_HEADERS,
     )
