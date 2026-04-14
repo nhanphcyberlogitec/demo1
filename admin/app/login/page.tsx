@@ -1,103 +1,154 @@
 "use client";
 
+import { useEffect, useRef, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const API_URL = "http://localhost:8000/api/auth/login";
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-type LoginResponse = {
-  success: boolean;
-  data: {
-    token: string;
-    user: {
-      id: string;
-      email: string;
-      created_at: string;
-      updated_at: string;
-    };
-  } | null;
-  message: string;
-};
+type FieldErrors = { email?: string; password?: string };
+
+function validateEmail(value: string): string | undefined {
+  if (!value.trim()) return "Email is required.";
+  if (!EMAIL_PATTERN.test(value.trim())) return "Enter a valid email address.";
+  return undefined;
+}
+
+function validatePassword(value: string): string | undefined {
+  if (!value) return "Password is required.";
+  if (value.length < 6) return "Password must be at least 6 characters.";
+  return undefined;
+}
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<{ email: boolean; password: boolean }>({
+    email: false,
+    password: false,
+  });
+  const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
-    if (!email.trim()) {
-      setError("Please enter your email.");
+  useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.getItem("token")) {
+      router.replace("/dashboard");
       return;
     }
-    if (!password) {
-      setError("Please enter your password.");
+    setCheckingAuth(false);
+  }, [router]);
+
+  if (checkingAuth) {
+    return (
+      <div className="flex flex-1 items-center justify-center bg-[#f9fafb]" />
+    );
+  }
+
+  const onBlurEmail = () => {
+    setTouched((t) => ({ ...t, email: true }));
+    setErrors((e) => ({ ...e, email: validateEmail(email) }));
+  };
+
+  const onBlurPassword = () => {
+    setTouched((t) => ({ ...t, password: true }));
+    setErrors((e) => ({ ...e, password: validatePassword(password) }));
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError(null);
+
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    setErrors({ email: emailError, password: passwordError });
+    setTouched({ email: true, password: true });
+
+    if (emailError || passwordError) {
+      if (emailError) emailRef.current?.focus();
+      else if (passwordError) passwordRef.current?.focus();
       return;
     }
 
-    setError("");
     setSubmitting(true);
-
     try {
-      const res = await fetch(API_URL, {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      let body: LoginResponse | null = null;
+      let payload: {
+        success?: boolean;
+        data?: { token: string; user: { id: string; email: string } } | null;
+        message?: string;
+      } = {};
       try {
-        body = (await res.json()) as LoginResponse;
+        payload = await response.json();
       } catch {
-        body = null;
+        // fall through to generic error
       }
 
-      if (res.status === 200 && body?.success && body.data) {
-        localStorage.setItem("token", body.data.token);
-        localStorage.setItem("user", JSON.stringify(body.data.user));
-        router.push("/dashboard");
+      if (response.ok && payload.success && payload.data) {
+        localStorage.setItem("token", payload.data.token);
+        localStorage.setItem("user", JSON.stringify(payload.data.user));
+        router.replace("/dashboard");
         return;
       }
 
-      if (res.status === 401) {
-        setError("Invalid email or password.");
-      } else if (res.status === 422) {
-        if (!EMAIL_REGEX.test(email.trim())) {
-          setError("Please enter a valid email address.");
-        } else if (password.length < 6) {
-          setError("Password must be at least 6 characters.");
-        } else {
-          setError(body?.message || "Please check your input and try again.");
-        }
+      if (response.status === 401) {
+        setFormError(payload.message || "Invalid email or password");
+      } else if (response.status === 422) {
+        setFormError(payload.message || "Invalid email or password format.");
       } else {
-        setError("Something went wrong. Please try again.");
+        setFormError(
+          payload.message || "Something went wrong. Please try again."
+        );
       }
+      setPassword("");
+      passwordRef.current?.focus();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setFormError("Something went wrong. Please try again.");
+      setPassword("");
+      passwordRef.current?.focus();
     } finally {
       setSubmitting(false);
     }
-  }
+  };
+
+  const emailInvalid = touched.email && !!errors.email;
+  const passwordInvalid = touched.password && !!errors.password;
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-[#f5f5f5] px-4 py-10">
+    <div className="flex flex-1 items-center justify-center bg-[#f9fafb] px-4 py-10">
       <div className="w-full max-w-[400px] rounded-xl border border-[#e5e7eb] bg-white p-10 shadow-sm">
-        <header className="mb-8">
-          <p className="text-sm font-normal text-[#6b7280]">Admin Panel</p>
-          <h1 className="mt-1 text-[28px] font-bold leading-tight text-[#111827]">
-            Sign In
-          </h1>
-        </header>
+        <h1 className="text-2xl font-bold text-[#111827]">Admin Panel</h1>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="mb-5">
+        <form
+          className="mt-6 flex flex-col gap-5"
+          onSubmit={handleSubmit}
+          noValidate
+        >
+          {formError && (
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="flex items-start gap-2 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-3 py-2 text-sm text-[#b91c1c]"
+            >
+              <span aria-hidden="true" className="mt-[1px]">⚠</span>
+              <span>{formError}</span>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="email"
-              className="mb-1.5 block text-[13px] font-medium text-[#374151]"
+              className="text-sm font-medium text-[#374151]"
             >
               Email
             </label>
@@ -105,20 +156,40 @@ export default function LoginPage() {
               id="email"
               name="email"
               type="email"
-              autoComplete="email"
-              autoFocus
+              autoComplete="username"
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              readOnly={submitting}
-              className="h-11 w-full rounded-lg border border-[#d1d5db] bg-white px-3.5 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#111827] focus:outline-none focus:ring-1 focus:ring-[#111827]"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (touched.email) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    email: validateEmail(e.target.value),
+                  }));
+                }
+              }}
+              onBlur={onBlurEmail}
+              disabled={submitting}
+              aria-invalid={emailInvalid ? "true" : "false"}
+              aria-describedby={emailInvalid ? "email-error" : undefined}
+              ref={emailRef}
+              className={`h-11 w-full rounded-lg border bg-white px-3.5 text-sm text-[#111827] placeholder-[#9ca3af] outline-none transition focus:ring-2 focus:ring-[#2563eb]/40 disabled:bg-[#f3f4f6] disabled:text-[#6b7280] ${
+                emailInvalid
+                  ? "border-[#dc2626] focus:border-[#dc2626]"
+                  : "border-[#d1d5db] focus:border-[#2563eb]"
+              }`}
             />
+            {emailInvalid && (
+              <p id="email-error" className="text-sm text-[#dc2626]">
+                {errors.email}
+              </p>
+            )}
           </div>
 
-          <div className="mb-5">
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="password"
-              className="mb-1.5 block text-[13px] font-medium text-[#374151]"
+              className="text-sm font-medium text-[#374151]"
             >
               Password
             </label>
@@ -127,36 +198,51 @@ export default function LoginPage() {
               name="password"
               type="password"
               autoComplete="current-password"
-              placeholder="Enter password"
+              placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              readOnly={submitting}
-              className="h-11 w-full rounded-lg border border-[#d1d5db] bg-white px-3.5 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#111827] focus:outline-none focus:ring-1 focus:ring-[#111827]"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (touched.password) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    password: validatePassword(e.target.value),
+                  }));
+                }
+              }}
+              onBlur={onBlurPassword}
+              disabled={submitting}
+              aria-invalid={passwordInvalid ? "true" : "false"}
+              aria-describedby={
+                passwordInvalid ? "password-error" : undefined
+              }
+              ref={passwordRef}
+              className={`h-11 w-full rounded-lg border bg-white px-3.5 text-sm text-[#111827] placeholder-[#9ca3af] outline-none transition focus:ring-2 focus:ring-[#2563eb]/40 disabled:bg-[#f3f4f6] disabled:text-[#6b7280] ${
+                passwordInvalid
+                  ? "border-[#dc2626] focus:border-[#dc2626]"
+                  : "border-[#d1d5db] focus:border-[#2563eb]"
+              }`}
             />
+            {passwordInvalid && (
+              <p id="password-error" className="text-sm text-[#dc2626]">
+                {errors.password}
+              </p>
+            )}
           </div>
-
-          {error && (
-            <div
-              role="alert"
-              aria-live="polite"
-              className="mb-5 rounded-md border border-[#fecaca] bg-[#fef2f2] px-3 py-2.5 text-[13px] text-[#b91c1c]"
-            >
-              {error}
-            </div>
-          )}
 
           <button
             type="submit"
             disabled={submitting}
-            className="h-12 w-full rounded-lg bg-[#111827] text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#2563eb] text-[15px] font-bold text-white transition hover:bg-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#93c5fd]"
           >
-            {submitting ? "Signing in…" : "Sign In"}
+            {submitting && (
+              <span
+                aria-hidden="true"
+                className="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-white"
+              />
+            )}
+            <span>{submitting ? "Signing in…" : "Sign In"}</span>
           </button>
         </form>
-
-        <p className="mt-6 text-[11px] text-[#9ca3af]">
-          Use admin@example.com / password123 for the seeded admin.
-        </p>
       </div>
     </div>
   );
