@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 type User = { id: string; email: string };
@@ -40,7 +41,17 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-1 flex-col bg-[#f9fafb]">
       <header className="flex items-center justify-between border-b border-[#e5e7eb] bg-white px-6 py-4">
-        <h1 className="text-xl font-bold text-[#111827]">Admin Panel</h1>
+        <div className="flex items-center gap-6">
+          <h1 className="text-xl font-bold text-[#111827]">Admin Panel</h1>
+          <nav className="flex gap-4 text-sm">
+            <Link href="/dashboard" className="font-medium text-[#2563eb]">
+              Dashboard
+            </Link>
+            <Link href="/accounts" className="text-[#6b7280] hover:text-[#111827]">
+              Accounts
+            </Link>
+          </nav>
+        </div>
         <button
           type="button"
           onClick={handleLogout}
@@ -55,6 +66,14 @@ export default function DashboardPage() {
           <p className="mt-2 text-sm text-[#6b7280]">
             Welcome, <span className="font-medium text-[#111827]">{user.email}</span>.
           </p>
+          <div className="mt-6">
+            <Link
+              href="/accounts"
+              className="inline-flex rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#1d4ed8]"
+            >
+              Manage accounts →
+            </Link>
+          </div>
         </div>
       </main>
     </div>
