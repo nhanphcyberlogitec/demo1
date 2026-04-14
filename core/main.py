@@ -33,11 +33,17 @@ def envelope(success: bool, data, message: str) -> dict:
     return {"success": success, "data": data, "message": message}
 
 
+NO_STORE_HEADERS = {"Cache-Control": "no-store"}
+
+INVALID_CREDENTIALS_MESSAGE = "Invalid email or password"
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc: RequestValidationError):
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=envelope(False, None, "Invalid email or password format."),
+        headers=NO_STORE_HEADERS,
     )
 
 
@@ -55,11 +61,6 @@ def create_access_token(user_id: str, email: str) -> str:
         "iat": now,
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=JWT_ALGORITHM)
-
-
-INVALID_CREDENTIALS_MESSAGE = "Invalid email or password"
-
-NO_STORE_HEADERS = {"Cache-Control": "no-store"}
 
 
 def _invalid_credentials_response() -> JSONResponse:
