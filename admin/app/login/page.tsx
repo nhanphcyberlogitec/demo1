@@ -45,14 +45,23 @@ export default function LoginPage() {
     setCheckingAuth(false);
   }, [router]);
 
-  // Focus the password field AFTER the input has been re-enabled
-  // (a disabled input silently rejects .focus()).
+  // Focus the password field after a failed submit. Two conditions must both
+  // hold before the browser will accept focus:
+  //   1. the input is no longer disabled (happens when `submitting` flips false)
+  //   2. the click that triggered submit has finished resolving focus — on a
+  //      mouse click the button briefly holds focus and releases it to <body>
+  //      on the next frame, which would overwrite ours.
+  // Deferring with requestAnimationFrame sidesteps (2); keying on formError
+  // also lets the effect fire even if `submitting` was already false.
   useEffect(() => {
     if (!submitting && shouldFocusPassword.current) {
       shouldFocusPassword.current = false;
-      passwordRef.current?.focus();
+      const id = requestAnimationFrame(() => {
+        passwordRef.current?.focus();
+      });
+      return () => cancelAnimationFrame(id);
     }
-  }, [submitting]);
+  }, [submitting, formError]);
 
   if (checkingAuth) {
     return (
