@@ -145,11 +145,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-1 items-center justify-center bg-[#f9fafb] px-4 py-10">
-      <div className="w-full max-w-[400px] rounded-xl border border-[#e5e7eb] bg-white p-10 shadow-sm">
-        <h1 className="text-2xl font-bold text-[#111827]">Admin Panel</h1>
-
+      <div className="w-full max-w-[400px] rounded-xl border border-[#e5e7eb] bg-white p-10">
         <form
-          className="mt-6 flex flex-col gap-5"
+          className="flex flex-col gap-6"
           onSubmit={handleSubmit}
           noValidate
         >
