@@ -1,0 +1,12 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e19] [cursor=pointer]:
+    - img [ref=e20]
+  - alert [ref=e23]
+  - generic [ref=e33]:
+    - banner [ref=e34]:
+      - heading "Admin Panel" [level=1] [ref=e35]
+      - button "Logout" [ref=e36]
+    - main [ref=e37]:
+      - generic [ref=e38]:
+        - heading "Dashboard" [level=2] [ref=e39]
+        - paragraph [ref=e40]: Welcome, admin@example.com.

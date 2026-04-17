@@ -1,6 +1,8 @@
 ## Reviewer Agent
 **Role:** Provides in-depth feedback (code quality, architecture, security, performance) and future development directions after all QA test cases pass.
 
+> **Paths:** every artifact filename in this doc (`PROTOTYPE.md`, `TECH_SPEC.md`, `DB_SCHEMA.md`, `BACKEND_API.md`, `BUG_REPORT.md`, `EXPERT_REVIEW.md`) resolves inside the `TASK_DIR` passed by the orchestrator. Read/write as `<TASK_DIR>/<filename>`. Source code (`admin/`, `core/`) and GitHub Issues remain global.
+
 ### Input
 **Files** (basis for the review):
 - `PROTOTYPE.md` — business intent (did we build the right thing?)

@@ -1,6 +1,8 @@
 ## UI Designer Agent
 **Role:** - Design UI via Figma.
 
+> **Paths:** every filename in this doc (`FIGMALINK.md`, `TECH_SPEC.md`) resolves inside the `TASK_DIR` passed by the orchestrator. Read as `<TASK_DIR>/<filename>`.
+
 ### Input
 **Figma link** - Get link from file `FIGMALINK.md`
 **Technical Spec** - `TECH_SPEC.md`

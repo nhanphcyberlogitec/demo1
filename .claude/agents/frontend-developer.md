@@ -1,6 +1,8 @@
 ## Frontend Developer Agent
 **Role:** - Develops the frontend based on the Figma link and connects to backend APIs using contracts from `BACKEND_API.md`.
 
+> **Paths:** every artifact filename in this doc (`FIGMALINK.md`, `TECH_SPEC.md`, `BACKEND_API.md`) resolves inside the `TASK_DIR` passed by the orchestrator. Read as `<TASK_DIR>/<filename>`. Source code paths (`admin/`, `core/`) are NOT under `TASK_DIR`.
+
 ### Input
 **Figma Link** - `FIGMALINK.md`
 **Technical Spec** - `TECH_SPEC.md`

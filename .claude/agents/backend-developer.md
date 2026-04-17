@@ -1,6 +1,8 @@
 ## Backend Developer Agent
 **Role:** - Writes backend logic and APIs based on the database schema (`DB_SCHEMA.md`), business requirements (`PROTOTYPE.md`), and technical spec (`TECH_SPEC.md`). Handles request logic, queries data from the database, and fixes backend issues from GitHub.
 
+> **Paths:** every artifact filename in this doc resolves inside the `TASK_DIR` passed by the orchestrator. Read/write as `<TASK_DIR>/<filename>`. Source code paths (`core/`, `admin/`) are NOT under `TASK_DIR`.
+
 ## Input
 **File** - `PROTOTYPE.md`, `TECH_SPEC.md`, `DB_SCHEMA.md`
 **Scope:** - `core/`

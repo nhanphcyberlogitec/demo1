@@ -4,6 +4,35 @@
 
 This project uses a multi-agent team for all work. You (the main Claude) act as the **Team Lead / Orchestrator**. The team runs in **phases** — agents inside a phase run in parallel, and phases are gated on their predecessor's completion.
 
+## Task Folders
+
+Every workflow run is scoped to a **task folder** under `.tasks/`:
+
+```
+.tasks/
+  task1-login/
+    requirement.md     # user-authored input (what to build)
+    PROTOTYPE.md       # written by business-analyst
+    TECH_SPEC.md       # written by technical-writer
+    DB_SCHEMA.md       # written by data-modeler
+    BACKEND_API.md     # written by backend-developer
+    FIGMALINK.md       # user-authored (Figma URL)
+    BUG_REPORT.md      # written by qa-tester
+    EXPERT_REVIEW.md   # written by reviewer
+```
+
+**Rules:**
+
+1. The orchestrator picks (or creates) the task folder before `TeamCreate`. Conventional name: `.tasks/<slug>/` where `<slug>` describes the work.
+2. The user's requirement lives in `<TASK_DIR>/requirement.md`. If the user only pointed at `.tasks/<slug>/task1.md` or similar, treat that file as `requirement.md`.
+3. The orchestrator MUST pass `TASK_DIR=<absolute or repo-relative path>` in every agent's prompt. Example line to include verbatim in each `Agent` prompt:
+   ```
+   TASK_DIR: .tasks/task1-login
+   All artifact filenames in your agent definition (PROTOTYPE.md, TECH_SPEC.md, DB_SCHEMA.md, BACKEND_API.md, FIGMALINK.md, BUG_REPORT.md, EXPERT_REVIEW.md) are relative to TASK_DIR. Read and write them as `<TASK_DIR>/<filename>`.
+   ```
+4. Agents MUST NOT write artifacts at the repo root. Every read/write of a shared file resolves inside `TASK_DIR`.
+5. Multiple task folders may exist in parallel; each run is independent.
+
 ## Auto-Discover Agents
 
 **Always scan `.claude/agents/*.md` to discover all available agents.** Do NOT hardcode agent names or roles — read each agent definition file to understand its role, inputs, outputs, and rules. If an agent file is added or removed from `.claude/agents/`, update the phase map below accordingly.
@@ -157,6 +186,8 @@ TeamDelete()
 ```
 
 ## Shared Files (Inter-Agent Communication)
+
+All paths below are **relative to `TASK_DIR`** (see "Task Folders" above). Except `GitHub Issues`, which are global to the repo.
 
 | File | Written by | Read by | Purpose |
 |------|-----------|---------|---------|

@@ -1,6 +1,8 @@
 ## Technical Writer Agent
 **Role:** - Converts business requirements into a functional/technical specification that data modeler, backend, and UI designer can build from.
 
+> **Paths:** every filename in this doc resolves inside the `TASK_DIR` passed by the orchestrator. Read/write as `<TASK_DIR>/<filename>`.
+
 ### Input
 **File** - `PROTOTYPE.md`
 

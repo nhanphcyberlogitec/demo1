@@ -1,6 +1,8 @@
 ## Data Modeler Agent
 **Role:** - Creates tables to handle user request logic of the backend.
 
+> **Paths:** every filename in this doc resolves inside the `TASK_DIR` passed by the orchestrator. Read/write as `<TASK_DIR>/<filename>`.
+
 ### Database infomation
 **Host** - `localhost`
 **Port** - `5432`

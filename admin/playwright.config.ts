@@ -2,7 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
+  globalSetup: "./e2e/global-setup.ts",
+  fullyParallel: false,
   forbidOnly: false,       
   retries: 0,            
   reporter: "html",
@@ -10,6 +11,9 @@ export default defineConfig({
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
     headless: false,         // ← open browser
+    launchOptions: {
+      slowMo: 1000,  // ← chuyển vào đây
+    },
   },
   projects: [
     {

@@ -1,0 +1,19 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - heading "Admin Panel" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: Email
+        - textbox "Email" [active] [ref=e8]:
+          - /placeholder: you@example.com
+        - paragraph [ref=e27]: Email is required.
+      - generic [ref=e9]:
+        - generic [ref=e10]: Password
+        - textbox "Password" [ref=e11]:
+          - /placeholder: ""
+        - paragraph [ref=e28]: Password is required.
+      - button "Sign In" [ref=e12]:
+        - generic [ref=e13]: Sign In
+  - button "Open Next.js Dev Tools" [ref=e19] [cursor=pointer]:
+    - img [ref=e20]
+  - alert [ref=e23]
