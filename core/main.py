@@ -67,7 +67,11 @@ def _field_errors_from_pydantic(exc: RequestValidationError) -> dict:
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     path = request.url.path
-    if path.startswith("/api/account/") or path.startswith("/api/accounts"):
+    if (
+        path.startswith("/api/account/")
+        or path.startswith("/api/accounts")
+        or path == "/api/auth/register"
+    ):
         errors = _field_errors_from_pydantic(exc)
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -160,6 +164,15 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=6, max_length=255)
 
 
+class RegisterRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    confirm_password: str
+
+    model_config = {"extra": "ignore"}
+
+
 def create_access_token(user_id: str, email: str) -> str:
     now = datetime.now(timezone.utc)
     payload = {
@@ -226,6 +239,74 @@ async def login(payload: LoginRequest):
                 "user": {"id": user_id_str, "email": user_email},
             },
             "Login successful",
+        ),
+        headers=NO_STORE_HEADERS,
+    )
+
+
+@app.post("/api/auth/register")
+async def register(payload: RegisterRequest):
+    errors: dict = {}
+
+    normalized_name, name_err = _validate_name(payload.name)
+    if name_err is not None:
+        errors["name"] = name_err
+
+    email_value = str(payload.email).strip().lower()
+    if not email_value:
+        errors["email"] = "Email is required"
+
+    pw_err = _validate_password(payload.password)
+    if pw_err:
+        errors["password"] = pw_err
+
+    if "password" not in errors and payload.password != payload.confirm_password:
+        errors["confirm_password"] = "Passwords do not match"
+
+    if errors:
+        return _validation_error_response(errors)
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM users WHERE LOWER(email) = %s",
+                (email_value,),
+            )
+            if cur.fetchone() is not None:
+                return _duplicate_email_response()
+
+            password_hash = bcrypt.hashpw(
+                payload.password.encode("utf-8"), bcrypt.gensalt()
+            ).decode("utf-8")
+
+            try:
+                cur.execute(
+                    "INSERT INTO users (email, password_hash, name, is_active) "
+                    "VALUES (%s, %s, %s, TRUE) RETURNING id, email",
+                    (email_value, password_hash, normalized_name),
+                )
+            except psycopg2.errors.UniqueViolation:
+                conn.rollback()
+                return _duplicate_email_response()
+            new_id, new_email = cur.fetchone()
+            conn.commit()
+    finally:
+        release_connection(conn)
+
+    new_id_str = str(new_id)
+    token = create_access_token(new_id_str, new_email)
+
+    logger.info("account.registered id=%s email=%s", new_id_str, new_email)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=envelope(
+            True,
+            {
+                "token": token,
+                "user": {"id": new_id_str, "email": new_email},
+            },
+            "Account created",
         ),
         headers=NO_STORE_HEADERS,
     )
