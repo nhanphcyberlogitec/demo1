@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const API_URL = "http://localhost:8000/api/auth/login";
@@ -144,7 +145,7 @@ export default function LoginPage() {
   const passwordInvalid = touched.password && !!errors.password;
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-[#f9fafb] px-4 py-10">
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#f9fafb] px-4 py-10">
       <div className="w-full max-w-[400px] rounded-xl border border-[#e5e7eb] bg-white p-10">
         <form
           className="flex flex-col gap-6"
@@ -261,6 +262,16 @@ export default function LoginPage() {
           </button>
         </form>
       </div>
+
+      <p className="text-sm text-[#374151]">
+        Don&apos;t have an account?{" "}
+        <Link
+          href="/register"
+          className="font-medium text-[#2563eb] hover:text-[#1d4ed8]"
+        >
+          Create one
+        </Link>
+      </p>
     </div>
   );
 }
