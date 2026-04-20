@@ -3,6 +3,8 @@
 
 > **Paths:** every artifact filename in this doc (`PROTOTYPE.md`, `TECH_SPEC.md`, `DB_SCHEMA.md`, `BACKEND_API.md`, `BUG_REPORT.md`, `EXPERT_REVIEW.md`) resolves inside the `TASK_DIR` passed by the orchestrator. Read/write as `<TASK_DIR>/<filename>`. Source code (`admin/`, `core/`) and GitHub Issues remain global.
 
+> **Branch:** `<BRANCH>` is the current working branch passed by the orchestrator (derived from `git branch --show-current`). Treat every mention of `<BRANCH>` below as that literal value.
+
 ### Input
 **Files** (basis for the review):
 - `PROTOTYPE.md` — business intent (did we build the right thing?)
@@ -12,7 +14,7 @@
 - `BUG_REPORT.md` + closed GitHub issues — QA history, recurring problem areas
 - Source code in `admin/` and `core/` — actual implementation
 
-**Branch:** `develop-test-3`
+**Branch:** `<BRANCH>`
 
 ### Output
 **File** - `EXPERT_REVIEW.md`

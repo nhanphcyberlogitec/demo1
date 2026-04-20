@@ -7,7 +7,7 @@
 **Host** - `localhost`
 **Port** - `5432`
 **Database** - `postgres`
-**Password** - `mat_khau_moi_cua_ban`
+**Password** - `postgres`
 
 ### Input
 **File** - `PROTOTYPE.md`, `TECH_SPEC.md`

@@ -25,10 +25,11 @@ Every workflow run is scoped to a **task folder** under `.tasks/`:
 
 1. The orchestrator picks (or creates) the task folder before `TeamCreate`. Conventional name: `.tasks/<slug>/` where `<slug>` describes the work.
 2. The user's requirement lives in `<TASK_DIR>/requirement.md`. If the user only pointed at `.tasks/<slug>/task1.md` or similar, treat that file as `requirement.md`.
-3. The orchestrator MUST pass `TASK_DIR=<absolute or repo-relative path>` in every agent's prompt. Example line to include verbatim in each `Agent` prompt:
+3. The orchestrator MUST pass `TASK_DIR=<absolute or repo-relative path>` and `BRANCH=<current git branch>` in every agent's prompt. Resolve `BRANCH` dynamically by running `git branch --show-current` — never hardcode. Example lines to include verbatim in each `Agent` prompt:
    ```
    TASK_DIR: .tasks/task1-login
-   All artifact filenames in your agent definition (PROTOTYPE.md, TECH_SPEC.md, DB_SCHEMA.md, BACKEND_API.md, FIGMALINK.md, BUG_REPORT.md, EXPERT_REVIEW.md) are relative to TASK_DIR. Read and write them as `<TASK_DIR>/<filename>`.
+   BRANCH: <output of `git branch --show-current`>
+   All artifact filenames in your agent definition (PROTOTYPE.md, TECH_SPEC.md, DB_SCHEMA.md, BACKEND_API.md, FIGMALINK.md, BUG_REPORT.md, EXPERT_REVIEW.md) are relative to TASK_DIR. Read and write them as `<TASK_DIR>/<filename>`. Every mention of `<BRANCH>` in your agent definition resolves to the value above.
    ```
 4. Agents MUST NOT write artifacts at the repo root. Every read/write of a shared file resolves inside `TASK_DIR`.
 5. Multiple task folders may exist in parallel; each run is independent.
@@ -46,7 +47,7 @@ The team runs in 6 phases. Each phase lists its members, the gate that must pass
 | 1. Requirements | `business-analyst` | user request received | `PROTOTYPE.md` written **and** user approved |
 | 2. Specification | `technical-writer` | Phase 1 exit gate | `TECH_SPEC.md` written **and** user approved |
 | 3. Design & Build (parallel) | `data-modeler`, `backend-developer`, `ui-designer` | Phase 2 exit gate | `DB_SCHEMA.md` + user approved, `BACKEND_API.md` + user approved, Figma design + user approved |
-| 4. Frontend Integration | `frontend-developer` | Phase 3 exit gate (needs both Figma and `BACKEND_API.md`) | frontend code pushed to `develop-test-3` **and** user approved the built UI |
+| 4. Frontend Integration | `frontend-developer` | Phase 3 exit gate (needs both Figma and `BACKEND_API.md`) | frontend code pushed to `<BRANCH>` **and** user approved the built UI |
 | 5. Test & Fix Loop | `qa-tester` (+ `frontend-developer` / `backend-developer` for fixes) | Phase 4 exit gate (user approved frontend) | all qa-tester test cases pass, zero open GitHub issues |
 | 6. Review | `reviewer` | Phase 5 exit gate | `EXPERT_REVIEW.md` written, presented to user |
 
@@ -127,7 +128,7 @@ Pause the workflow and ask the user for approval before advancing past these gat
 3. Mid-Phase 3 — show `DB_SCHEMA.md` as soon as `data-modeler` finishes. Once approved, notify `backend-developer` with `"DB_SCHEMA.md approved"` so it can start DB-touching code.
 4. Mid/End-Phase 3 — show `BACKEND_API.md` as soon as `backend-developer` finishes. Once approved, notify `frontend-developer` with `"BACKEND_API.md approved"`.
 5. End of Phase 3 — show Figma design
-6. After Phase 4 — `frontend-developer` has pushed `admin/` to `develop-test-3`; run the UI locally and have the user approve it. Once approved, notify `qa-tester` with `"frontend approved"` to start testing.
+6. After Phase 4 — `frontend-developer` has pushed `admin/` to `<BRANCH>`; run the UI locally and have the user approve it. Once approved, notify `qa-tester` with `"frontend approved"` to start testing.
 7. After Phase 6 — show `EXPERT_REVIEW.md`
 
 If the user requests changes, re-send the relevant agent a message with the feedback and wait for re-completion before re-asking.
@@ -139,10 +140,10 @@ After `qa-tester` files GitHub issues:
 1. **qa-tester finishes round** — it creates GitHub issues labeled `frontend` or `backend` and messages the orchestrator
 2. **Orchestrator notifies fix agents**:
    ```
-   SendMessage({ to: "frontend-developer", message: "qa-tester filed GitHub issues. Fetch issues labeled 'frontend', fix, push to develop-test-3, and close each issue with a fix reference." })
-   SendMessage({ to: "backend-developer", message: "qa-tester filed GitHub issues. Fetch issues labeled 'backend', fix, push to develop-test-3, and close each issue with a fix reference." })
+   SendMessage({ to: "frontend-developer", message: "qa-tester filed GitHub issues. Fetch issues labeled 'frontend', fix, push to <BRANCH>, and close each issue with a fix reference." })
+   SendMessage({ to: "backend-developer", message: "qa-tester filed GitHub issues. Fetch issues labeled 'backend', fix, push to <BRANCH>, and close each issue with a fix reference." })
    ```
-3. **Agents fix and close** — each fetches its labeled issues via GitHub MCP, reads repro steps, fixes in scope (`admin/` or `core/`), pushes to `develop-test-3`, closes the issue
+3. **Agents fix and close** — each fetches its labeled issues via GitHub MCP, reads repro steps, fixes in scope (`admin/` or `core/`), pushes to `<BRANCH>`, closes the issue
 4. **Orchestrator triggers re-test**:
    ```
    SendMessage({ to: "qa-tester", message: "Fixes are in. Re-run the full test suite. If new failures surface, file new issues." })
@@ -229,4 +230,4 @@ Reusable skill definitions in `.agents/skills/`:
 - **business-analyst, technical-writer, ui-designer, reviewer**: never write code — spec/review docs only
 - **data-modeler**: never modifies code — only creates/alters tables via MCP Postgres
 - **qa-tester**: never modifies code — runs tests, files GitHub issues
-- **All code agents push to branch**: `develop-test-3`
+- **All code agents push to branch**: `<BRANCH>` (the current git branch, passed in each agent's prompt)

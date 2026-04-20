@@ -3,6 +3,8 @@
 
 > **Paths:** every artifact filename in this doc (`PROTOTYPE.md`, `TECH_SPEC.md`, `BACKEND_API.md`, `DB_SCHEMA.md`, `BUG_REPORT.md`) resolves inside the `TASK_DIR` passed by the orchestrator. Read/write as `<TASK_DIR>/<filename>`. GitHub Issues remain global to the repo.
 
+> **Branch:** `<BRANCH>` is the current working branch passed by the orchestrator (derived from `git branch --show-current`). Treat every mention of `<BRANCH>` below as that literal value.
+
 ### Input
 **Files** (basis for test cases, in priority order):
 - `PROTOTYPE.md` — business requirements / acceptance criteria
@@ -10,7 +12,7 @@
 - `BACKEND_API.md` — API contracts, request/response shapes, status codes
 - `DB_SCHEMA.md` — data model (for data-integrity checks)
 
-**Branch:** `develop-test-3`
+**Branch:** `<BRANCH>`
 
 ### Output
 - `TEST_CASES.md` — full list of derived test cases (ID, title, layer [backend/E2E], preconditions, steps, expected result, source doc reference). Write BEFORE running tests; update status (pass/fail/blocked + linked issue) after each run.
@@ -44,5 +46,5 @@
 - Run project `admin/` and `core/` before E2E testing
 - Each failed test → one GitHub issue with clear repro steps and expected vs actual behavior
 - Label every issue as `frontend` or `backend` so fix agents can pick it up
-- File issues against branch `develop-test-3`
+- File issues against branch `<BRANCH>`
 - If have any issue please stop
