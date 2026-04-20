@@ -143,8 +143,13 @@ export default function LoginPage() {
     if (res.status === 401) {
       setPassword("");
       setFormError(body.message || STRINGS.errors.invalidCredentials);
-      emailRef.current?.focus();
-    } else if (res.status === 422) {
+      setSubmitting(false);
+      // Defer focus until React commits `submitting=false`; a disabled input
+      // cannot receive focus.
+      requestAnimationFrame(() => emailRef.current?.focus());
+      return;
+    }
+    if (res.status === 422) {
       setFormError(STRINGS.errors.invalidRequest);
     } else {
       setFormError(body.message || STRINGS.errors.serverError);
