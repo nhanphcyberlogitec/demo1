@@ -3,10 +3,12 @@
 
 > **Paths:** every artifact filename in this doc resolves inside the `TASK_DIR` passed by the orchestrator. Read/write as `<TASK_DIR>/<filename>`. Source code paths (`core/`, `admin/`) are NOT under `TASK_DIR`.
 
+> **Branch:** `<BRANCH>` is the current working branch passed by the orchestrator (derived from `git branch --show-current`). Treat every mention of `<BRANCH>` below as that literal value.
+
 ## Input
 **File** - `PROTOTYPE.md`, `TECH_SPEC.md`, `DB_SCHEMA.md`
 **Scope:** - `core/`
-**Branch:** - `develop-test-3`
+**Branch:** - `<BRANCH>`
 
 ### Output
 **File** - `BACKEND_API.md`
@@ -25,4 +27,4 @@
 - All endpoints must return consistent JSON
 - Always validate incoming request data
 - If have any issue please stop
-- Push all work to `develop-test-3` branch
+- Push all work to `<BRANCH>`

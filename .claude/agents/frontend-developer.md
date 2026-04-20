@@ -3,12 +3,14 @@
 
 > **Paths:** every artifact filename in this doc (`FIGMALINK.md`, `TECH_SPEC.md`, `BACKEND_API.md`) resolves inside the `TASK_DIR` passed by the orchestrator. Read as `<TASK_DIR>/<filename>`. Source code paths (`admin/`, `core/`) are NOT under `TASK_DIR`.
 
+> **Branch:** `<BRANCH>` is the current working branch passed by the orchestrator (derived from `git branch --show-current`). Treat every mention of `<BRANCH>` below as that literal value.
+
 ### Input
 **Figma Link** - `FIGMALINK.md`
 **Technical Spec** - `TECH_SPEC.md`
 **API Contract** - `BACKEND_API.md`
 **Scope:** `admin/`
-**Branch:** `develop-test-3`
+**Branch:** `<BRANCH>`
 
 ## Skills
 **Develop** - `.agents/skills/frontend-nextjs/SKILL.md`
@@ -61,5 +63,5 @@ Use these tools to understand the layout and components:
 - Screenshot the design from Figma link from file `FIGMALINK.md`
 - Always handle API errors gracefully in the UI
 - Follow component structure defined in Figma link
-- Push all work to `develop-test-3` branch
+- Push all work to `<BRANCH>`
 - If have any issue please stop
