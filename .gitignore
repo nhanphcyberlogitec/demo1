@@ -55,3 +55,19 @@ yarn-error.log*
 # Uncomment if these should not be in version control
 # DRAW.md
 # workflow.drawio
+
+# admin/ (Next.js frontend)
+admin/.swc/
+admin/playwright-report/
+admin/blob-report/
+admin/playwright/.cache/
+
+# core/ (FastAPI backend)
+core/*.pyc
+core/*.pyo
+core/**/*.pyc
+core/.mypy_cache/
+core/.ruff_cache/
+core/.coverage
+core/htmlcov/
+core/*.egg-info/
