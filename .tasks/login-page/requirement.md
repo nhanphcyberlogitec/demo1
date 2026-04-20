@@ -1,2 +1,2 @@
 # Login Page
-Develop new login page simple.
+Develop new login page simple for web.
