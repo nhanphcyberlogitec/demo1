@@ -11,6 +11,9 @@ export default defineConfig({
     baseURL: "http://localhost:3000",
     trace: "retain-on-failure",
     headless: false,
+    launchOptions: {
+      slowMo: 2000, // delay 500ms sau mỗi action
+    },
   },
   projects: [
     {
