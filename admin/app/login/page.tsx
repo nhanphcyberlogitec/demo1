@@ -76,10 +76,19 @@ export default function LoginPage() {
     // react-hooks/set-state-in-effect; this still resolves on the next frame.
     const handle = requestAnimationFrame(() => {
       setCheckingSession(false);
-      emailRef.current?.focus();
     });
     return () => cancelAnimationFrame(handle);
   }, [router]);
+
+  // Autofocus email once the form is actually mounted (TECH_SPEC §2.2,
+  // AC-1). A separate effect — running in the same rAF as checkingSession=
+  // false would fire while the form is still unmounted and emailRef.current
+  // is null (see issue #37).
+  useEffect(() => {
+    if (!checkingSession) {
+      emailRef.current?.focus();
+    }
+  }, [checkingSession]);
 
   const pending = formState.kind === "pending";
 
