@@ -35,7 +35,9 @@
    - Run: `cd core && source venv/bin/activate && pytest -v`
 2. **Frontend E2E tests (Playwright)**
    - Location: `admin/e2e/*.spec.ts`
-   - Run: `cd admin && npm run test:e2e`
+   - Run: `cd admin && npm run test:e2e` — **always** uses the committed `playwright.config.ts` (headed with `slowMo`) so the user can watch each QA round in a visible browser window.
+   - The agent **must not** create, maintain, or use any alternate Playwright config (e.g. `playwright.qa.config.ts`). Always invoke the default `playwright.config.ts`. Do not pass `--config=` to override it.
+   - Never flip `playwright.config.ts` itself to headless.
 
 ## Rules
 - Writes test files ONLY under `core/tests/` and `admin/e2e/`. Never modifies `core/main.py`, `admin/app/**`, or any production code.
