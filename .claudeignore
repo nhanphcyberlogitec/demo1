@@ -30,3 +30,7 @@ pnpm-lock.yaml
 .DS_Store
 *.log
 .vercel/
+
+# File
+DRAW.md
+workflow.drawio
