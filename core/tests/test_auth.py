@@ -241,3 +241,27 @@ def test_422_collects_errors_for_multiple_fields(client):
     errors = _assert_422_envelope(resp)
     assert errors.get("email") == "Email is required"
     assert errors.get("password") == "Password is required"
+
+
+def test_422_on_email_too_long(client):
+    # 256 chars total (245 + "@example.com") — over the 254 cap.
+    long_local = "a" * 245
+    long_email = f"{long_local}@example.com"
+    assert len(long_email) > 254
+    resp = client.post(
+        "/api/auth/login",
+        json={"email": long_email, "password": FAKE_PASSWORD},
+    )
+    errors = _assert_422_envelope(resp)
+    assert errors.get("email") == "Email is too long"
+
+
+def test_422_on_password_too_long(client):
+    # 129 chars — over the 128 cap.
+    long_pw = "a" * 129
+    resp = client.post(
+        "/api/auth/login",
+        json={"email": FAKE_EMAIL, "password": long_pw},
+    )
+    errors = _assert_422_envelope(resp)
+    assert errors.get("password") == "Password is too long"
