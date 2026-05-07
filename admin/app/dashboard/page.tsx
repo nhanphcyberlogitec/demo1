@@ -1,113 +1,124 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+// /dashboard — landing page rendered inside the shared AdminShell layout
+// (TECH_SPEC §3.1). Auth is handled by app/dashboard/layout.tsx.
 
-type SessionUser = {
-  id: string;
-  email: string;
+import { useEffect, useState } from "react";
+import { listUsers, type UserDTO } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { useSetPageTitle } from "@/lib/page-title";
+
+type Card = {
+  label: string;
+  value: number | null; // null = loading; -1 = error
 };
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [checking, setChecking] = useState(true);
+  useSetPageTitle("Dashboard");
+  const { user, guard } = useAuth();
+
+  const [total, setTotal] = useState<Card>({ label: "Total users", value: null });
+  const [admins, setAdmins] = useState<Card>({ label: "Administrators", value: null });
+  const [thisWeek, setThisWeek] = useState<Card>({
+    label: "Created this week",
+    value: null,
+  });
 
   useEffect(() => {
-    let token: string | null = null;
-    let rawUser: string | null = null;
-    try {
-      token = localStorage.getItem("token");
-      rawUser = localStorage.getItem("user");
-    } catch {
-      token = null;
-      rawUser = null;
-    }
+    let cancelled = false;
+    // 1) Cheap "total users" count via pagination metadata.
+    guard(listUsers({ page: 1, limit: 1 }))
+      .then((res) => {
+        if (cancelled) return;
+        setTotal({ label: "Total users", value: res.pagination.total });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setTotal({ label: "Total users", value: -1 });
+      });
 
-    if (!token || !rawUser) {
-      router.replace("/login");
-      return;
-    }
+    // 2) Administrators / Created this week — derived from a single
+    //    page (limit=100) since BACKEND_API.md does not expose a dedicated
+    //    aggregate endpoint and PROTOTYPE §6 keeps that out of scope.
+    //    Adequate for early-stage admin panels (well below 100 users); if
+    //    the system outgrows this, swap in a backend aggregate.
+    guard(listUsers({ page: 1, limit: 100 }))
+      .then((res) => {
+        if (cancelled) return;
+        const adminCount = res.items.filter(
+          (u: UserDTO) => u.role === "admin"
+        ).length;
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const weekCount = res.items.filter((u: UserDTO) => {
+          const created = new Date(u.created_at).getTime();
+          return Number.isFinite(created) && created >= sevenDaysAgo;
+        }).length;
+        setAdmins({ label: "Administrators", value: adminCount });
+        setThisWeek({ label: "Created this week", value: weekCount });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAdmins({ label: "Administrators", value: -1 });
+        setThisWeek({ label: "Created this week", value: -1 });
+      });
 
-    // Basic malformed-JWT defense: a JWT must have 3 dot-separated parts.
-    if (token.split(".").length !== 3) {
-      try {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      } catch {
-        // ignore
-      }
-      router.replace("/login");
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(rawUser) as SessionUser;
-      if (!parsed || typeof parsed.email !== "string") {
-        throw new Error("Malformed user object");
-      }
-      setUser(parsed);
-      setChecking(false);
-    } catch {
-      try {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      } catch {
-        // ignore
-      }
-      router.replace("/login");
-    }
-  }, [router]);
-
-  function handleLogout() {
-    try {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-    } catch {
-      // ignore
-    }
-    router.replace("/login");
-  }
-
-  if (checking || !user) {
-    // Don't flash protected content (TECH_SPEC §3.6).
-    return <div aria-busy="true" className="min-h-dvh bg-slate-50" />;
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [guard]);
 
   return (
-    <div className="min-h-dvh bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <h1 className="text-lg font-bold text-slate-900 tracking-tight">
-            Admin Panel
-          </h1>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-1.5 text-sm font-semibold text-slate-900 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-          >
-            Log out
-          </button>
-        </div>
+    <section aria-labelledby="dashboard-heading" className="space-y-6">
+      <header>
+        <h2
+          id="dashboard-heading"
+          className="text-2xl font-bold tracking-tight text-slate-900"
+        >
+          Dashboard
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Welcome, {user.email}.
+        </p>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-10">
-        <section
-          aria-labelledby="welcome-heading"
-          className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <h2
-            id="welcome-heading"
-            className="text-xl font-bold text-slate-900 tracking-tight"
-          >
-            Welcome, {user.email}
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            You&apos;re signed in. Use the header&apos;s &ldquo;Log out&rdquo;
-            button to end your session.
-          </p>
-        </section>
-      </main>
-    </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <SummaryCard card={total} hint="Across all roles" />
+        <SummaryCard card={admins} hint='Users with role "admin"' />
+        <SummaryCard card={thisWeek} hint="In the last 7 days" />
+      </div>
+    </section>
+  );
+}
+
+function SummaryCard({
+  card,
+  hint,
+}: {
+  card: Card;
+  hint: string;
+}) {
+  const display =
+    card.value === null
+      ? "—"
+      : card.value === -1
+      ? "—"
+      : new Intl.NumberFormat().format(card.value);
+
+  return (
+    <article
+      aria-label={card.label}
+      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+    >
+      <p className="text-sm font-medium text-slate-500">{card.label}</p>
+      <p
+        className="mt-2 text-3xl font-semibold tracking-tight text-slate-900"
+        aria-live="polite"
+      >
+        {display}
+      </p>
+      <p className="mt-2 text-xs text-slate-500">
+        {card.value === -1 ? "Couldn't load — try refreshing." : hint}
+      </p>
+    </article>
   );
 }
